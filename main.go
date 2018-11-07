@@ -27,17 +27,28 @@ import (
 const splitter = "=========================================================\n"
 const insertSQL = "INSERT OR IGNORE INTO searchIndex(name, type, path) VALUES (?,?,?)"
 
-var silent bool
 var docsetDir string
 
+var (
+	silent bool
+	name   string
+	icon   string
+)
+
+func init() {
+	flag.BoolVar(&silent, "silent", false, "Silent mode (only print error)")
+	flag.StringVar(&name, "name", "GoDoc", "Set docset name")
+	flag.StringVar(&icon, "icon", "", "Docset icon .png path")
+	flag.Parse()
+}
+
 func main() {
-	name, icon := parseFlag()
 	docsetDir = name + ".docset"
 
 	// icon
 	err := writeIcon(icon)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println(err) // TODO: change log mode.
 		return
 	}
 
@@ -97,18 +108,6 @@ func main() {
 
 	// download pages and insert DB indexes
 	grabPackages(tx.Stmt(stmt), host, packages)
-}
-
-func parseFlag() (name string, icon string) {
-	silentInput := flag.Bool("silent", false, "Silent mode (only print error)")
-	nameInput := flag.String("name", "GoDoc", "Set docset name")
-	iconInput := flag.String("icon", "", "Docset icon .png path")
-
-	flag.Parse()
-	silent = *silentInput
-	name = *nameInput
-	icon = *iconInput
-	return
 }
 
 func writeIcon(p string) (err error) {
